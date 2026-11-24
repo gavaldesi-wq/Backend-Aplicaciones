@@ -17,7 +17,9 @@ import cl.mpazpro.actividades.repository.ActividadDesafioRepository;
 import cl.mpazpro.actividades.repository.AlternativaRepository;
 import cl.mpazpro.actividades.repository.PreguntaRepository;
 import lombok.RequiredArgsConstructor;
-
+import cl.mpazpro.actividades.dto.SolucionPruebaDTO;
+import cl.mpazpro.actividades.model.PruebaFinal;
+import cl.mpazpro.actividades.repository.PruebaFinalRepository;
 @Service
 @RequiredArgsConstructor
 public class SolucionarioService {
@@ -25,6 +27,7 @@ public class SolucionarioService {
     private final ActividadDesafioRepository actividadRepository;
     private final PreguntaRepository preguntaRepository;
     private final AlternativaRepository alternativaRepository;
+    private final PruebaFinalRepository pruebaFinalRepository;
 
     @Transactional(readOnly = true)
     public SolucionActividadDTO obtener(Long actividadId) {
@@ -49,6 +52,33 @@ public class SolucionarioService {
 
         SolucionActividadDTO dto = new SolucionActividadDTO();
         dto.setActividadId(actividadId);
+        dto.setPreguntas(preguntas);
+        return dto;
+    }
+
+    @Transactional(readOnly = true)
+    public SolucionPruebaDTO obtenerPrueba(Long pruebaId) {
+        PruebaFinal prueba = pruebaFinalRepository.findById(pruebaId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Prueba no encontrada"
+                ));
+    
+        if (prueba.getEstado() != EstadoContenido.PUBLICADO) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Prueba no encontrada"
+            );
+        }
+    
+        List<SolucionPreguntaDTO> preguntas = preguntaRepository
+                .findByPruebaFinal_IdOrderByOrdenAsc(pruebaId)
+                .stream()
+                .map(this::aSolucion)
+                .toList();
+    
+        SolucionPruebaDTO dto = new SolucionPruebaDTO();
+        dto.setPruebaId(pruebaId);
         dto.setPreguntas(preguntas);
         return dto;
     }

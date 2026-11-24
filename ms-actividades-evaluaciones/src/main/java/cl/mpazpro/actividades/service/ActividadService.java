@@ -2,6 +2,7 @@ package cl.mpazpro.actividades.service;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -11,21 +12,18 @@ import org.springframework.web.server.ResponseStatusException;
 import cl.mpazpro.actividades.dto.ActividadDTO;
 import cl.mpazpro.actividades.model.ActividadDesafio;
 import cl.mpazpro.actividades.model.EstadoContenido;
-import cl.mpazpro.actividades.repository.ActividadDesafioRepository;
-import lombok.RequiredArgsConstructor;
-
-import cl.mpazpro.actividades.dto.TransicionEstadoDTO;
 import cl.mpazpro.actividades.model.TipoRecursoPublicable;
 import cl.mpazpro.actividades.model.TransicionPublicacion;
+import cl.mpazpro.actividades.repository.ActividadDesafioRepository;
 import cl.mpazpro.actividades.repository.TransicionPublicacionRepository;
-
-import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class ActividadService {
 
     private final ActividadDesafioRepository actividadRepository;
+    private final TransicionPublicacionRepository transicionRepository;
 
     @Transactional(readOnly = true)
     public List<ActividadDTO> getAll(Long objetivoAprendizajeId) {
