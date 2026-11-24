@@ -94,7 +94,7 @@ public class UnidadService {
                 case PUBLICADO ->
                         estadoNuevo == EstadoContenido.DESHABILITADO;
 
-                case DESHABILITADO -> false;
+                case DESHABILITADO -> estadoNuevo == EstadoContenido.PUBLICADO;
         };
 
         if (!permitido) {
