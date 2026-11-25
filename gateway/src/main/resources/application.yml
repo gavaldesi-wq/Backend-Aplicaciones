@@ -7,28 +7,33 @@ spring:
         webmvc:
           routes:
             - id: progreso-respuestas
-              uri: http://127.0.0.1:8084
+              uri: ${MPAZ_PROGRESO_URL:http://127.0.0.1:8084}
               predicates:
                 - Method=POST
                 - Path=/api/v1/estudiante/actividades/*/respuestas
+            - id: actividades-por-objetivo
+              uri: ${MPAZ_ACTIVIDADES_URL:http://127.0.0.1:8083}
+              predicates:
+                - Method=GET
+                - Path=/api/v1/estudiante/objetivos/*/actividades
             - id: progreso-estudiante
-              uri: http://127.0.0.1:8084
+              uri: ${MPAZ_PROGRESO_URL:http://127.0.0.1:8084}
               predicates:
                 - Path=/api/v1/estudiante/inicio,/api/v1/estudiante/objetivos/*/progreso,/api/v1/estudiante/objetivos/*/prueba-final,/api/v1/estudiante/pruebas/**,/api/v1/estudiante/intentos/**,/api/v1/estudiante/progreso/**,/api/v1/sincronizacion/**
             - id: progreso-docente
-              uri: http://127.0.0.1:8084
+              uri: ${MPAZ_PROGRESO_URL:http://127.0.0.1:8084}
               predicates:
                 - Path=/api/v1/docente/asignaciones/**,/api/v1/docente/progreso,/api/v1/docente/estudiantes/*/resultados,/api/v1/docente/informes/**,/api/v1/docente/objetivos-disponibles
             - id: admin
-              uri: http://127.0.0.1:8081
+              uri: ${MPAZ_ADMIN_URL:http://127.0.0.1:8081}
               predicates:
                 - Path=/api/v1/auth/**,/api/v1/usuarios/**,/api/v1/utp/cursos/**,/api/v1/utp/matriculas/**,/api/v1/utp/unidades/*/historial,/api/v1/utp/historial-aprobaciones,/api/v1/docente/cursos,/api/v1/docente/estudiantes
             - id: contenidos
-              uri: http://127.0.0.1:8082
+              uri: ${MPAZ_CONTENIDOS_URL:http://127.0.0.1:8082}
               predicates:
-                - Path=/api/v1/asignaturas/**,/api/v1/utp/unidades/**,/api/v1/utp/objetivos/**,/api/v1/utp/contenidos/**,/api/v1/recursos/**,/api/v1/estudiante/unidades,/api/v1/estudiante/objetivos,/api/v1/estudiante/objetivos/*/contenidos
+                - Path=/api/v1/asignaturas/**,/api/v1/utp/unidades,/api/v1/utp/unidades/**,/api/v1/utp/objetivos,/api/v1/utp/objetivos/**,/api/v1/utp/contenidos,/api/v1/utp/contenidos/**,/api/v1/utp/recursos,/api/v1/utp/recursos/**,/api/v1/recursos/**,/api/v1/estudiante/unidades,/api/v1/estudiante/objetivos,/api/v1/estudiante/objetivos/*/contenidos
             - id: actividades
-              uri: http://127.0.0.1:8083
+              uri: ${MPAZ_ACTIVIDADES_URL:http://127.0.0.1:8083}
               predicates:
                 - Path=/api/v1/utp/actividades/**,/api/v1/utp/preguntas/**,/api/v1/utp/pruebas-finales/**,/api/v1/estudiante/actividades/**
 
