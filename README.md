@@ -18,16 +18,43 @@ El cliente Android solo consume el **gateway en `:8080`**.
 ## Requisitos
 
 - Docker Desktop
-- Archivo `.env` (copiar desde `.env.example`) con:
-  - `MPAZ_MYSQL_ROOT_PASSWORD`
-  - `MPAZ_MYSQL_PASSWORD` / passwords por servicio
-  - `MPAZ_JWT_SECRET`
+- Archivo `.env` en esta carpeta (no se versiona)
 
-**No versionar** el `.env`.
+### Claves / secretos (compañeros)
+
+El `.env` está en `.gitignore`, por eso al clonar las claves “vienen vacías”.  
+Usá el ejemplo con valores **demo del equipo**:
+
+```bash
+# Windows (PowerShell / cmd)
+copy .env.example .env
+
+# macOS / Linux
+cp .env.example .env
+```
+
+Variables incluidas (demo local / defensa):
+
+- `MPAZ_MYSQL_ROOT_PASSWORD`
+- `MPAZ_MYSQL_PASSWORD` (contenidos)
+- `MPAZ_ADMIN_MYSQL_PASSWORD`
+- `MPAZ_ACTIVIDADES_MYSQL_PASSWORD`
+- `MPAZ_PROGRESO_MYSQL_PASSWORD`
+- `MPAZ_JWT_SECRET`
+
+**No versionar** el `.env`. Si MySQL ya tenía un volumen creado con otras claves, o bien alineás el `.env` a esas claves, o borrás el volumen y levantás de cero:
+
+```bash
+docker compose down -v
+docker compose up -d --build
+```
+
+(`-v` borra datos de MySQL; solo en entorno local.)
 
 ## Levantar
 
 ```bash
+copy .env.example .env   # solo la primera vez
 docker compose up -d --build
 docker compose ps
 curl http://127.0.0.1:8080/actuator/health
