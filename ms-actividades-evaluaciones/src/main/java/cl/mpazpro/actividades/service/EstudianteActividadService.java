@@ -14,6 +14,7 @@ import cl.mpazpro.actividades.model.ActividadDesafio;
 import cl.mpazpro.actividades.model.Alternativa;
 import cl.mpazpro.actividades.model.EstadoContenido;
 import cl.mpazpro.actividades.model.Pregunta;
+import cl.mpazpro.actividades.model.PruebaFinal;
 import cl.mpazpro.actividades.repository.ActividadDesafioRepository;
 import cl.mpazpro.actividades.repository.AlternativaRepository;
 import cl.mpazpro.actividades.repository.PreguntaRepository;

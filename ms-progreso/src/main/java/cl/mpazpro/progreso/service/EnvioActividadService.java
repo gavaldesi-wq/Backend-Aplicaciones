@@ -42,6 +42,7 @@ public class EnvioActividadService {
     private final RespuestaEstudianteRepository respuestaRepository;
     private final ProgresoRepository progresoRepository;
     private final ObjectMapper objectMapper;
+    private final SesionActual sesionActual;
 
     @Transactional
     public ResultadoEnvioDTO registrar(Long actividadId, EnvioActividadDTO dto) {
