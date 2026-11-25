@@ -9,17 +9,17 @@ import org.springframework.web.server.ResponseStatusException;
 
 import cl.mpazpro.actividades.dto.SolucionActividadDTO;
 import cl.mpazpro.actividades.dto.SolucionPreguntaDTO;
+import cl.mpazpro.actividades.dto.SolucionPruebaDTO;
 import cl.mpazpro.actividades.model.ActividadDesafio;
 import cl.mpazpro.actividades.model.Alternativa;
 import cl.mpazpro.actividades.model.EstadoContenido;
 import cl.mpazpro.actividades.model.Pregunta;
+import cl.mpazpro.actividades.model.PruebaFinal;
 import cl.mpazpro.actividades.repository.ActividadDesafioRepository;
 import cl.mpazpro.actividades.repository.AlternativaRepository;
 import cl.mpazpro.actividades.repository.PreguntaRepository;
-import lombok.RequiredArgsConstructor;
-import cl.mpazpro.actividades.dto.SolucionPruebaDTO;
-import cl.mpazpro.actividades.model.PruebaFinal;
 import cl.mpazpro.actividades.repository.PruebaFinalRepository;
+import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class SolucionarioService {
@@ -52,6 +52,7 @@ public class SolucionarioService {
 
         SolucionActividadDTO dto = new SolucionActividadDTO();
         dto.setActividadId(actividadId);
+        dto.setObjetivoAprendizajeId(actividad.getObjetivoAprendizajeId());
         dto.setPreguntas(preguntas);
         return dto;
     }

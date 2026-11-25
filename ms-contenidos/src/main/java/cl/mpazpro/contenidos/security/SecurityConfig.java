@@ -20,62 +20,44 @@ public class SecurityConfig {
     private final JwtProvider jwtProvider;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(
-            HttpSecurity http
-    ) throws Exception {
+public SecurityFilterChain securityFilterChain(
+        HttpSecurity http
+) throws Exception {
 
-        return http
-                .csrf(csrf -> csrf.disable())
-                .httpBasic(basic -> basic.disable())
-                .formLogin(form -> form.disable())
-
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(
-                                SessionCreationPolicy.STATELESS
-                        )
-                )
-
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/actuator/health",
-                                "/api/v1/health",
-                                "/error"
-                        ).permitAll()
-
-                        .requestMatchers(
-                                "/api/v1/utp",
-                                "/api/v1/utp/**"
-                        ).hasRole("UTP")
-
-                        .requestMatchers(
-                                "/api/v1/estudiante",
-                                "/api/v1/estudiante/**"
-                        ).hasRole("ESTUDIANTE")
-
-                        .requestMatchers(
-                                HttpMethod.POST, "/api/v1/**"
-                        ).hasRole("UTP")
-
-                        .requestMatchers(
-                                HttpMethod.PUT, "/api/v1/**"
-                        ).hasRole("UTP")
-
-                        .requestMatchers(
-                                HttpMethod.PATCH, "/api/v1/**"
-                        ).hasRole("UTP")
-
-                        .requestMatchers(
-                                HttpMethod.DELETE, "/api/v1/**"
-                        ).hasRole("UTP")
-
-                        .anyRequest().authenticated()
-                )
-
-                .addFilterBefore(
-                        new JwtAuthenticationFilter(jwtProvider),
-                        UsernamePasswordAuthenticationFilter.class
-                )
-
-                .build();
-    }
+    return http
+            .csrf(csrf -> csrf.disable())
+            .httpBasic(basic -> basic.disable())
+            .formLogin(form -> form.disable())
+            .sessionManagement(session ->
+                    session.sessionCreationPolicy(
+                            SessionCreationPolicy.STATELESS
+                    )
+            )
+            .authorizeHttpRequests(auth -> auth
+                    .requestMatchers(
+                            "/actuator/health",
+                            "/api/v1/health",
+                            "/error"
+                    ).permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/v1/interno/objetivos").permitAll()
+                    .requestMatchers(
+                            "/api/v1/utp",
+                            "/api/v1/utp/**"
+                    ).hasRole("UTP")
+                    .requestMatchers(
+                            "/api/v1/estudiante",
+                            "/api/v1/estudiante/**"
+                    ).hasRole("ESTUDIANTE")
+                    .requestMatchers(HttpMethod.POST, "/api/v1/**").hasRole("UTP")
+                    .requestMatchers(HttpMethod.PUT, "/api/v1/**").hasRole("UTP")
+                    .requestMatchers(HttpMethod.PATCH, "/api/v1/**").hasRole("UTP")
+                    .requestMatchers(HttpMethod.DELETE, "/api/v1/**").hasRole("UTP")
+                    .anyRequest().authenticated()
+            )
+            .addFilterBefore(
+                    new JwtAuthenticationFilter(jwtProvider),
+                    UsernamePasswordAuthenticationFilter.class
+            )
+            .build();
+}
 }

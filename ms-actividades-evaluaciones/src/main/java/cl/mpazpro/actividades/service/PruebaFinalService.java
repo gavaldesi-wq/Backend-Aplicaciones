@@ -10,21 +10,22 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import cl.mpazpro.actividades.dto.PruebaFinalDTO;
+import cl.mpazpro.actividades.dto.PruebaPublicadaDTO;
 import cl.mpazpro.actividades.model.EstadoContenido;
 import cl.mpazpro.actividades.model.PruebaFinal;
 import cl.mpazpro.actividades.model.TipoRecursoPublicable;
 import cl.mpazpro.actividades.model.TransicionPublicacion;
 import cl.mpazpro.actividades.repository.PruebaFinalRepository;
 import cl.mpazpro.actividades.repository.TransicionPublicacionRepository;
+import cl.mpazpro.actividades.security.SesionActual;
 import lombok.RequiredArgsConstructor;
-
 @Service
 @RequiredArgsConstructor
 public class PruebaFinalService {
 
     private final PruebaFinalRepository pruebaRepository;
     private final TransicionPublicacionRepository transicionRepository;
-
+    private final SesionActual sesionActual;
     @Transactional(readOnly = true)
     public List<PruebaFinalDTO> getAll(Long objetivoAprendizajeId) {
         List<PruebaFinal> pruebas;
@@ -44,7 +45,7 @@ public class PruebaFinalService {
     @Transactional
     public PruebaFinalDTO save(PruebaFinalDTO dto) {
         PruebaFinal prueba = dto.toModel();
-
+    
         if (prueba.getDisponibleDesde() != null
                 && prueba.getDisponibleHasta() != null
                 && !prueba.getDisponibleDesde().isBefore(prueba.getDisponibleHasta())) {
@@ -53,13 +54,13 @@ public class PruebaFinalService {
                     "disponibleDesde debe ser anterior a disponibleHasta"
             );
         }
-
+    
         prueba.setObjetivoAprendizajeId(dto.getObjetivoAprendizajeId());
         prueba.setEstado(EstadoContenido.BORRADOR);
-        prueba.setCreadoPorUsuarioId(1L);
+        prueba.setCreadoPorUsuarioId(sesionActual.utpId());
         prueba.setCreadoEn(Instant.now());
         prueba.setActualizadoEn(Instant.now());
-
+    
         return PruebaFinalDTO.fromModel(
                 pruebaRepository.save(prueba)
         );
@@ -132,11 +133,40 @@ public class PruebaFinalService {
         transicion.setRecursoId(id);
         transicion.setEstadoAnterior(estadoActual);
         transicion.setEstadoNuevo(estadoNuevo);
-        transicion.setUsuarioId(1L);
+        transicion.setUsuarioId(sesionActual.utpId());
         transicion.setOcurridoEn(Instant.now());
         transicionRepository.save(transicion);
     
         return PruebaFinalDTO.fromModel(prueba);
+    }
+    
+    @Transactional(readOnly = true)
+    public PruebaPublicadaDTO obtenerPublicada(Long objetivoAprendizajeId) {
+        PruebaFinal prueba = pruebaRepository
+                .findByObjetivoAprendizajeId(objetivoAprendizajeId)
+                .stream()
+                .filter(item -> item.getEstado() == EstadoContenido.PUBLICADO)
+                .findFirst()
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Prueba no encontrada"
+                ));
+    
+        return PruebaPublicadaDTO.fromModel(prueba);
+    }
+
+    @Transactional(readOnly = true)
+    public PruebaPublicadaDTO obtenerPublicadaPorId(Long id) {
+        PruebaFinal prueba = buscarPrueba(id);
+    
+        if (prueba.getEstado() != EstadoContenido.PUBLICADO) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Prueba no encontrada"
+            );
+        }
+    
+        return PruebaPublicadaDTO.fromModel(prueba);
     }
     
     private PruebaFinal buscarPrueba(Long id) {

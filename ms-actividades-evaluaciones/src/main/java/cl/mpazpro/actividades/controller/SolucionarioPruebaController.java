@@ -6,7 +6,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import cl.mpazpro.actividades.dto.PruebaPublicadaDTO;
 import cl.mpazpro.actividades.dto.SolucionPruebaDTO;
+import cl.mpazpro.actividades.service.PruebaFinalService;
 import cl.mpazpro.actividades.service.SolucionarioService;
 import lombok.RequiredArgsConstructor;
 
@@ -21,6 +23,15 @@ public class SolucionarioPruebaController {
     public ResponseEntity<SolucionPruebaDTO> obtener(@PathVariable Long id) {
         return ResponseEntity.ok(
                 solucionarioService.obtenerPrueba(id)
+        );
+    }
+
+    private final PruebaFinalService pruebaFinalService;
+
+    @GetMapping("/{id}")
+    public ResponseEntity<PruebaPublicadaDTO> obtenerPublicada(@PathVariable Long id) {
+        return ResponseEntity.ok(
+                pruebaFinalService.obtenerPublicadaPorId(id)
         );
     }
 }
