@@ -1,10 +1,22 @@
+x-health-java: &health-java
+  interval: 10s
+  timeout: 5s
+  retries: 20
+  start_period: 60s
+  test:
+    - CMD-SHELL
+    - >-
+      bash -ec 'exec 3<>/dev/tcp/127.0.0.1/$$SERVER_PORT;
+      printf "GET /actuator/health HTTP/1.0\r\nHost: localhost\r\n\r\n" >&3;
+      IFS= read -r status <&3;
+      [[ "$$status" == *" 200 "* ]]'
+
 services:
   mysql:
     image: mysql:8.4
-    container_name: mpaz-mysql
     restart: unless-stopped
     ports:
-      - "127.0.0.1:3307:3306"
+      - "127.0.0.1:${MPAZ_MYSQL_PORT:-13307}:3306"
     environment:
       MYSQL_ROOT_PASSWORD: ${MPAZ_MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: mpaz_contenidos
@@ -17,96 +29,98 @@ services:
       - mpaz_mysql_data:/var/lib/mysql
       - ./mysql/init:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD"]
+      test: ["CMD-SHELL", "mysql --protocol=TCP -h 127.0.0.1 -u root -p\"$$MYSQL_ROOT_PASSWORD\" -e 'SELECT 1'"]
       interval: 10s
       timeout: 5s
-      retries: 15
+      retries: 20
+      start_period: 30s
 
   ms-admin:
     build: ./ms-admin
-    container_name: mpaz-ms-admin
     restart: unless-stopped
     depends_on:
       mysql:
         condition: service_healthy
-    ports:
-      - "8081:8081"
     environment:
+      SERVER_PORT: "8081"
       MPAZ_JWT_SECRET: ${MPAZ_JWT_SECRET}
       MPAZ_ADMIN_MYSQL_PASSWORD: ${MPAZ_ADMIN_MYSQL_PASSWORD}
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/mpaz_admin
+    healthcheck: *health-java
 
   ms-contenidos:
     build: ./ms-contenidos
-    container_name: mpaz-ms-contenidos
     restart: unless-stopped
     depends_on:
       mysql:
         condition: service_healthy
       ms-admin:
-        condition: service_started
-    ports:
-      - "8082:8082"
+        condition: service_healthy
     environment:
+      SERVER_PORT: "8082"
       MPAZ_JWT_SECRET: ${MPAZ_JWT_SECRET}
       MPAZ_MYSQL_PASSWORD: ${MPAZ_MYSQL_PASSWORD}
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/mpaz_contenidos
       MPAZ_RECURSOS_DIRECTORIO: /app/uploads
-      # Historial de aprobaciones (transiciones UTP) vive en ms-admin
       MPAZ_ADMIN_URL: http://ms-admin:8081
     volumes:
       - mpaz_contenidos_uploads:/app/uploads
+    healthcheck: *health-java
 
   ms-actividades-evaluaciones:
     build: ./ms-actividades-evaluaciones
-    container_name: mpaz-ms-actividades
     restart: unless-stopped
     depends_on:
       mysql:
         condition: service_healthy
-    ports:
-      - "8083:8083"
     environment:
+      SERVER_PORT: "8083"
       MPAZ_JWT_SECRET: ${MPAZ_JWT_SECRET}
       MPAZ_ACTIVIDADES_MYSQL_PASSWORD: ${MPAZ_ACTIVIDADES_MYSQL_PASSWORD}
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/mpaz_actividades
+    healthcheck: *health-java
 
   ms-progreso:
     build: ./ms-progreso
-    container_name: mpaz-ms-progreso
     restart: unless-stopped
     depends_on:
       mysql:
         condition: service_healthy
       ms-actividades-evaluaciones:
-        condition: service_started
+        condition: service_healthy
       ms-contenidos:
-        condition: service_started
-    ports:
-      - "8084:8084"
+        condition: service_healthy
     environment:
+      SERVER_PORT: "8084"
       MPAZ_JWT_SECRET: ${MPAZ_JWT_SECRET}
       MPAZ_PROGRESO_MYSQL_PASSWORD: ${MPAZ_PROGRESO_MYSQL_PASSWORD}
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/mpaz_progreso
       MPAZ_ACTIVIDADES_URL: http://ms-actividades-evaluaciones:8083
       MPAZ_CONTENIDOS_URL: http://ms-contenidos:8082
+    healthcheck: *health-java
 
   gateway:
     build: ./gateway
-    container_name: mpaz-gateway
+    
     restart: unless-stopped
     depends_on:
-      - ms-admin
-      - ms-contenidos
-      - ms-actividades-evaluaciones
-      - ms-progreso
+      ms-admin:
+        condition: service_healthy
+      ms-contenidos:
+        condition: service_healthy
+      ms-actividades-evaluaciones:
+        condition: service_healthy
+      ms-progreso:
+        condition: service_healthy
     ports:
-      - "8080:8080"
+      - "127.0.0.1:${MPAZ_GATEWAY_PORT:-18080}:8080"
     environment:
+      SERVER_PORT: "8080"
       MPAZ_ADMIN_URL: http://ms-admin:8081
       MPAZ_CONTENIDOS_URL: http://ms-contenidos:8082
       MPAZ_ACTIVIDADES_URL: http://ms-actividades-evaluaciones:8083
       MPAZ_PROGRESO_URL: http://ms-progreso:8084
+    healthcheck: *health-java
 
 volumes:
   mpaz_mysql_data:

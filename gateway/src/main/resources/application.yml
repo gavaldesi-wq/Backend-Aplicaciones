@@ -1,6 +1,9 @@
 spring:
+  config:
+    import: "optional:file:./.env[.properties],optional:file:../.env[.properties]"
   application:
     name: gateway
+  
   cloud:
     gateway:
       server:
@@ -38,4 +41,4 @@ spring:
                 - Path=/api/v1/utp/actividades/**,/api/v1/utp/preguntas/**,/api/v1/utp/pruebas-finales/**,/api/v1/estudiante/actividades/**
 
 server:
-  port: 8080
+  port: ${MPAZ_GATEWAY_PORT:18080}
