@@ -1,4 +1,4 @@
-[README-backend.md](https://github.com/user-attachments/files/35433069/README-backend.md)
+[README-backend-defensa.md](https://github.com/user-attachments/files/35433216/README-backend-defensa.md)
 # MPAZ PRO — Backend
 
 Microservicios Spring Boot + **Spring Cloud Gateway MVC** + MySQL 8, orquestados con **Docker Compose**.
@@ -90,20 +90,56 @@ docker compose ps -a
 docker compose logs --tail=100
 ```
 
-## Verificar persistencia en MySQL
+## Demostración de persistencia y API REST (defensa)
 
-```bash
+### 1. Consultar MySQL antes y después de crear una unidad
+
+Desde la raíz del backend, con Docker funcionando:
+
+```powershell
 docker compose exec mysql mysql -u root -p
 ```
 
-Usar la contraseña de `.env` y consultar la base correspondiente, por ejemplo:
+Ingresar la contraseña de MySQL indicada por `MPAZ_MYSQL_ROOT_PASSWORD` en `.env`.
 
 ```sql
 USE mpaz_contenidos;
-SHOW TABLES;
+SELECT id, asignatura_id, titulo, orden, estado FROM unidad ORDER BY id DESC LIMIT 10;
 ```
 
-Consultar la tabla de materiales antes y después de registrar un material desde Android. Repetir el `SELECT` sobre la tabla real para verificar el nuevo registro.
+Desde Android, ingresar como UTP01 y crear una unidad con el título `Unidad demostracion`. Repetir la consulta SQL y comprobar el ID y el estado `BORRADOR` del nuevo registro. También se puede buscar por título:
+
+```sql
+SELECT id, asignatura_id, titulo, orden, estado
+FROM unidad WHERE titulo = 'Unidad demostracion';
+```
+
+Para comprobar otros contenidos, las tablas son `objetivo_aprendizaje` y `contenido_didactico`:
+
+```sql
+SELECT * FROM objetivo_aprendizaje ORDER BY id DESC LIMIT 5;
+SELECT * FROM contenido_didactico ORDER BY id DESC LIMIT 5;
+```
+
+Salir de MySQL con `exit;`. Si se prefiere una interfaz gráfica, conectar MySQL Workbench a `127.0.0.1:13307` con usuario `root` y la contraseña local, y consultar las mismas tablas.
+
+### 2. Consultar la API en Postman
+
+Primero obtener el JWT de UTP mediante `POST http://127.0.0.1:18080/api/v1/auth/demo-login`, Body → raw → JSON:
+
+```json
+{"codigoUsuario":"UTP01","clave":"demo1234"}
+```
+
+Copiar el valor de `token` de la respuesta. Crear una solicitud GET a:
+
+```http
+GET http://127.0.0.1:18080/api/v1/utp/unidades?pagina=0&tamano=100
+```
+
+En Authorization, seleccionar Bearer Token y pegar el token. La respuesta contiene `items`, `total`, `pagina` y `tamano`. Repetir el GET después de crear la unidad desde Android y buscarla en `items` (si hay más de 100 registros, consultar la página correspondiente). Si se conoce su ID, consultar directamente `GET /api/v1/utp/unidades/{id}`. La ruta UTP requiere el rol UTP.
+
+Postman demuestra que la API devuelve el registro; la consulta directa a MySQL demuestra su persistencia. Comparar el mismo ID en ambas herramientas.
 
 ## Login demo
 
