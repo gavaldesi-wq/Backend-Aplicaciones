@@ -1,11 +1,13 @@
 package cl.mpazpro.progreso.repository;
 
-import cl.mpazpro.progreso.model.EnvioActividad;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.Optional;
+import cl.mpazpro.progreso.model.EnvioActividad;
 
 public interface EnvioActividadRepository extends JpaRepository<EnvioActividad, Long> {
 
     Optional<EnvioActividad> findByClientEventId(String clientEventId);
+    java.util.List<EnvioActividad> findByEstudianteIdOrderByRegistradoEnAsc(Long estudianteId);
 }

@@ -16,15 +16,15 @@ import cl.mpazpro.actividades.model.TipoRecursoPublicable;
 import cl.mpazpro.actividades.model.TransicionPublicacion;
 import cl.mpazpro.actividades.repository.ActividadDesafioRepository;
 import cl.mpazpro.actividades.repository.TransicionPublicacionRepository;
+import cl.mpazpro.actividades.security.SesionActual;
 import lombok.RequiredArgsConstructor;
-
 @Service
 @RequiredArgsConstructor
 public class ActividadService {
 
     private final ActividadDesafioRepository actividadRepository;
     private final TransicionPublicacionRepository transicionRepository;
-
+    private final SesionActual sesionActual;
     @Transactional(readOnly = true)
     public List<ActividadDTO> getAll(Long objetivoAprendizajeId) {
 
@@ -45,13 +45,13 @@ public class ActividadService {
     @Transactional
     public ActividadDTO save(ActividadDTO dto) {
         ActividadDesafio actividad = dto.toModel();
-
+    
         actividad.setObjetivoAprendizajeId(dto.getObjetivoAprendizajeId());
         actividad.setEstado(EstadoContenido.BORRADOR);
-        actividad.setCreadoPorUsuarioId(1L);
+        actividad.setCreadoPorUsuarioId(sesionActual.utpId());
         actividad.setCreadoEn(Instant.now());
         actividad.setActualizadoEn(Instant.now());
-
+    
         return ActividadDTO.fromModel(
                 actividadRepository.save(actividad)
         );
@@ -89,7 +89,7 @@ public class ActividadService {
     public ActividadDTO cambiarEstado(Long id, EstadoContenido estadoNuevo) {
         ActividadDesafio actividad = buscarActividad(id);
         EstadoContenido estadoActual = actividad.getEstado();
-
+    
         boolean permitido = switch (estadoActual) {
             case BORRADOR -> estadoNuevo == EstadoContenido.EN_REVISION;
             case EN_REVISION -> estadoNuevo == EstadoContenido.AUTORIZADO;
@@ -97,28 +97,28 @@ public class ActividadService {
             case PUBLICADO -> estadoNuevo == EstadoContenido.DESHABILITADO;
             case DESHABILITADO -> false;
         };
-
+    
         if (!permitido) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
                     "Transicion de estado no permitida"
             );
         }
-
+    
         actividad.setEstado(estadoNuevo);
         actividad.setActualizadoEn(Instant.now());
         actividadRepository.save(actividad);
-
+    
         TransicionPublicacion transicion = new TransicionPublicacion();
         transicion.setEventoId(UUID.randomUUID().toString());
         transicion.setRecursoTipo(TipoRecursoPublicable.ACTIVIDAD);
         transicion.setRecursoId(id);
         transicion.setEstadoAnterior(estadoActual);
         transicion.setEstadoNuevo(estadoNuevo);
-        transicion.setUsuarioId(1L);
+        transicion.setUsuarioId(sesionActual.utpId());
         transicion.setOcurridoEn(Instant.now());
         transicionRepository.save(transicion);
-
+    
         return ActividadDTO.fromModel(actividad);
     }
 

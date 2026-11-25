@@ -2,6 +2,7 @@
 package cl.mpazpro.contenidos.service;
 
 import cl.mpazpro.contenidos.dto.ObjetivoAprendizajeDTO;
+import cl.mpazpro.contenidos.dto.ObjetivoElegibleDTO;
 import cl.mpazpro.contenidos.model.ObjetivoAprendizaje;
 import cl.mpazpro.contenidos.model.Unidad;
 import cl.mpazpro.contenidos.model.EstadoContenido;
@@ -170,6 +171,23 @@ public class ObjetivoAprendizajeService {
         );
 
         return ObjetivoAprendizajeDTO.fromModel(objetivo);
+        }
+
+        @Transactional(readOnly = true)
+        public List<ObjetivoElegibleDTO> listarElegibles() {
+            return objetivoRepository.findAll().stream()
+                    .filter(objetivo -> objetivo.getEstado() == EstadoContenido.AUTORIZADO
+                            || objetivo.getEstado() == EstadoContenido.PUBLICADO)
+                    .map(objetivo -> {
+                        ObjetivoElegibleDTO dto = new ObjetivoElegibleDTO();
+                        dto.setId(objetivo.getId());
+                        dto.setUnidadId(objetivo.getUnidad().getId());
+                        dto.setCodigo(objetivo.getCodigo());
+                        dto.setDescripcion(objetivo.getDescripcion());
+                        dto.setEstado(objetivo.getEstado().name());
+                        return dto;
+                    })
+                    .toList();
         }
 
 }

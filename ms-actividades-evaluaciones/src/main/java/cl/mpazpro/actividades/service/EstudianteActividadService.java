@@ -17,6 +17,7 @@ import cl.mpazpro.actividades.model.Pregunta;
 import cl.mpazpro.actividades.repository.ActividadDesafioRepository;
 import cl.mpazpro.actividades.repository.AlternativaRepository;
 import cl.mpazpro.actividades.repository.PreguntaRepository;
+import cl.mpazpro.actividades.repository.PruebaFinalRepository;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -26,6 +27,7 @@ public class EstudianteActividadService {
     private final ActividadDesafioRepository actividadRepository;
     private final PreguntaRepository preguntaRepository;
     private final AlternativaRepository alternativaRepository;
+    private final PruebaFinalRepository pruebaFinalRepository;
 
     @Transactional(readOnly = true)
     public ActividadEstudianteDTO obtener(Long id) {
@@ -49,6 +51,47 @@ public class EstudianteActividadService {
         dto.setTitulo(actividad.getTitulo());
         dto.setPreguntas(preguntasDe(id));
         return dto;
+    }
+
+    @Transactional(readOnly = true)
+    public List<ActividadEstudianteDTO> listarPublicadas(Long objetivoAprendizajeId) {
+        return actividadRepository
+                .findByObjetivoAprendizajeIdOrderByOrdenAsc(objetivoAprendizajeId)
+                .stream()
+                .filter(actividad -> actividad.getEstado() == EstadoContenido.PUBLICADO)
+                .map(this::resumen)
+                .toList();
+    }
+    
+    private ActividadEstudianteDTO resumen(ActividadDesafio actividad) {
+        ActividadEstudianteDTO dto = new ActividadEstudianteDTO();
+        dto.setId(actividad.getId());
+        dto.setObjetivoAprendizajeId(actividad.getObjetivoAprendizajeId());
+        dto.setTipo(actividad.getTipo());
+        dto.setTitulo(actividad.getTitulo());
+        return dto;
+    }
+    
+    @Transactional(readOnly = true)
+    public List<PreguntaEstudianteDTO> preguntasDePrueba(Long pruebaId) {
+        PruebaFinal prueba = pruebaFinalRepository.findById(pruebaId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Prueba no encontrada"
+                ));
+    
+        if (prueba.getEstado() != EstadoContenido.PUBLICADO) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Prueba no encontrada"
+            );
+        }
+    
+        return preguntaRepository
+                .findByPruebaFinal_IdOrderByOrdenAsc(pruebaId)
+                .stream()
+                .map(this::aPregunta)
+                .toList();
     }
 
     private List<PreguntaEstudianteDTO> preguntasDe(Long actividadId) {
