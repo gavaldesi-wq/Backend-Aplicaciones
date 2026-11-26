@@ -182,6 +182,34 @@ public class PreguntaService {
         return armarRespuesta(id);
     }
 
+    @Transactional(readOnly = true)
+    public List<PreguntaDTO> listarPorActividad(Long actividadId) {
+        if (!actividadRepository.existsById(actividadId)) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Actividad no encontrada"
+            );
+        }
+        return preguntaRepository.findByActividad_IdOrderByOrdenAsc(actividadId)
+                .stream()
+                .map(pregunta -> armarRespuesta(pregunta.getId()))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<PreguntaDTO> listarPorPrueba(Long pruebaFinalId) {
+        if (!pruebaFinalRepository.existsById(pruebaFinalId)) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Prueba no encontrada"
+            );
+        }
+        return preguntaRepository.findByPruebaFinal_IdOrderByOrdenAsc(pruebaFinalId)
+                .stream()
+                .map(pregunta -> armarRespuesta(pregunta.getId()))
+                .toList();
+    }
+
     private PreguntaDTO armarRespuesta(Long preguntaId) {
         Pregunta pregunta = preguntaRepository.findById(preguntaId).orElseThrow();
         List<AlternativaDTO> opciones = alternativaRepository
