@@ -15,9 +15,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import cl.mpazpro.actividades.dto.ActividadDTO;
 import cl.mpazpro.actividades.dto.PaginacionDTO;
+import cl.mpazpro.actividades.dto.PreguntaDTO;
 import cl.mpazpro.actividades.dto.TransicionEstadoDTO;
 import cl.mpazpro.actividades.model.EstadoContenido;
 import cl.mpazpro.actividades.service.ActividadService;
+import cl.mpazpro.actividades.service.PreguntaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -27,6 +29,7 @@ import lombok.RequiredArgsConstructor;
 public class ActividadController {
 
     private final ActividadService actividadService;
+    private final PreguntaService preguntaService;
 
     @GetMapping
     public ResponseEntity<PaginacionDTO<ActividadDTO>> getAll(
@@ -53,6 +56,14 @@ public class ActividadController {
     public ResponseEntity<ActividadDTO> getById(@PathVariable Long id) {
         return ResponseEntity.ok(
                 actividadService.getById(id)
+        );
+    }
+
+    /** Solo UTP: incluye la alternativa correcta para poder editarla. */
+    @GetMapping("/{id}/preguntas")
+    public ResponseEntity<List<PreguntaDTO>> preguntas(@PathVariable Long id) {
+        return ResponseEntity.ok(
+                preguntaService.listarPorActividad(id)
         );
     }
 

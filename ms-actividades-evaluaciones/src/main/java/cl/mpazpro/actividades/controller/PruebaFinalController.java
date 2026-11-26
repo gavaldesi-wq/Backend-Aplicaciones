@@ -14,9 +14,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import cl.mpazpro.actividades.dto.PaginacionDTO;
+import cl.mpazpro.actividades.dto.PreguntaDTO;
 import cl.mpazpro.actividades.dto.PruebaFinalDTO;
 import cl.mpazpro.actividades.dto.TransicionEstadoDTO;
 import cl.mpazpro.actividades.model.EstadoContenido;
+import cl.mpazpro.actividades.service.PreguntaService;
 import cl.mpazpro.actividades.service.PruebaFinalService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +29,15 @@ import lombok.RequiredArgsConstructor;
 public class PruebaFinalController {
 
     private final PruebaFinalService pruebaFinalService;
+    private final PreguntaService preguntaService;
+
+    /** Solo UTP: incluye la alternativa correcta para poder editarla. */
+    @GetMapping("/{id}/preguntas")
+    public ResponseEntity<List<PreguntaDTO>> preguntas(@PathVariable Long id) {
+        return ResponseEntity.ok(
+                preguntaService.listarPorPrueba(id)
+        );
+    }
 
     @GetMapping
     public ResponseEntity<PaginacionDTO<PruebaFinalDTO>> getAll(
